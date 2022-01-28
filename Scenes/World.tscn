@@ -1,0 +1,99 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://Scenes/PlayerInstancer.tscn" type="PackedScene" id=1]
+[ext_resource path="res://Scenes/EnemyInstancer.tscn" type="PackedScene" id=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Node2D
+
+signal instance_enemy
+
+var rng = RandomNumberGenerator.new()
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	 rng.randomize()
+
+func _on_PlayerInstancer_recieved_damage(life):
+	$Label.text = str(life)
+
+
+func _on_PlayerInstancer_died():
+	get_tree().paused = true
+	$Popup.show()
+
+
+func _on_Restart_pressed():
+	$Popup.hide()
+	get_tree().paused = false
+	get_tree().reload_current_scene()
+
+
+func _on_Timer_timeout():
+	var my_random_number = rng.randi_range(1,4)
+	emit_signal(\"instance_enemy\",my_random_number)
+
+"
+
+[node name="World" type="Node2D"]
+script = SubResource( 1 )
+
+[node name="PlayerInstancer" parent="." instance=ExtResource( 1 )]
+position = Vector2( 528, 286 )
+
+[node name="Label" type="Label" parent="."]
+margin_right = 40.0
+margin_bottom = 14.0
+text = "10"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Popup" type="Popup" parent="."]
+pause_mode = 2
+margin_left = 386.0
+margin_top = 195.0
+margin_right = 426.0
+margin_bottom = 235.0
+
+[node name="Restart" type="Button" parent="Popup"]
+margin_left = 60.0
+margin_top = 35.0
+margin_right = 232.0
+margin_bottom = 123.0
+text = "Reiniciar"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="EI1" parent="." instance=ExtResource( 2 )]
+position = Vector2( 164, 40 )
+instancer_id = 1
+direction = Vector2( 1, 1 )
+
+[node name="EI2" parent="." instance=ExtResource( 2 )]
+position = Vector2( 868, -5 )
+instancer_id = 2
+direction = Vector2( -1, 1 )
+
+[node name="EI3" parent="." instance=ExtResource( 2 )]
+position = Vector2( 145, 535 )
+instancer_id = 3
+direction = Vector2( 1, -1 )
+
+[node name="EI4" parent="." instance=ExtResource( 2 )]
+position = Vector2( 869, 541 )
+instancer_id = 4
+direction = Vector2( -1, -1 )
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 3.0
+autostart = true
+
+[connection signal="instance_enemy" from="." to="EI1" method="instance_now"]
+[connection signal="instance_enemy" from="." to="EI2" method="instance_now"]
+[connection signal="instance_enemy" from="." to="EI3" method="instance_now"]
+[connection signal="instance_enemy" from="." to="EI4" method="instance_now"]
+[connection signal="died" from="PlayerInstancer" to="." method="_on_PlayerInstancer_died"]
+[connection signal="recieved_damage" from="PlayerInstancer" to="." method="_on_PlayerInstancer_recieved_damage"]
+[connection signal="pressed" from="Popup/Restart" to="." method="_on_Restart_pressed"]
+[connection signal="timeout" from="Timer" to="." method="_on_Timer_timeout"]
